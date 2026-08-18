@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Invest Intel 驾驶舱</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">II</div>
+          <div>
+            <strong>Invest Intel</strong>
+            <span>投资情报驾驶舱</span>
+          </div>
+        </div>
+        <nav class="nav" aria-label="主导航">
+          <button class="nav-item active" data-view="dashboard" type="button">今日情报</button>
+          <button class="nav-item" data-view="watchlist" type="button">观察列表</button>
+          <button class="nav-item" data-view="gurus" type="button">大佬追踪</button>
+          <button class="nav-item" data-view="stock" type="button">股票详情</button>
+          <button class="nav-item" data-view="notes" type="button">决策笔记</button>
+        </nav>
+        <div class="sidebar-note">
+          <span>数据策略</span>
+          <p>新闻近实时；13F 季度滞后；ARK 日更；内部人 Form 4 通常更及时。</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">2026-08-18 · 美股盘前工作台</p>
+            <h1 id="viewTitle">今日情报</h1>
+          </div>
+          <div class="top-actions">
+            <label class="search">
+              <span>搜索</span>
+              <input id="searchInput" type="search" placeholder="股票 / 新闻 / 大佬" />
+            </label>
+            <button id="briefBtn" class="primary-action" type="button">生成今日简报</button>
+          </div>
+        </header>
+
+        <section class="ticker-strip" aria-label="市场概览">
+          <div><span>SPY</span><strong>+0.42%</strong><small>科技权重带动</small></div>
+          <div><span>QQQ</span><strong>+0.81%</strong><small>AI 链回暖</small></div>
+          <div><span>VIX</span><strong>-3.2%</strong><small>风险偏好恢复</small></div>
+          <div><span>10Y</span><strong>4.18%</strong><small>降息预期升温</small></div>
+        </section>
+
+        <section id="dashboard" class="view active-view">
+          <div class="grid dashboard-grid">
+            <section class="panel hero-panel">
+              <div>
+                <p class="eyebrow">Market Pulse</p>
+                <h2>先看事件，再看价格</h2>
+                <p>把新闻、披露、内部人交易和你的观察列表合并成一张盘前清单。</p>
+              </div>
+              <div class="signal-orbit" aria-hidden="true">
+                <div class="signal-card buy">ARK 增持 TSLA</div>
+                <div class="signal-card warn">NVDA 财报倒计时</div>
+                <div class="signal-card file">BRK 13F 更新</div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h2>今日优先级</h2>
+                <span class="pill">AI 排序</span>
+              </div>
+              <div id="priorityList" class="priority-list"></div>
+            </section>
+
+            <section class="panel wide-panel">
+              <div class="panel-head">
+                <h2>实时新闻流</h2>
+                <div class="segmented" role="tablist" aria-label="新闻过滤">
+                  <button class="segment active" data-filter="all" type="button">全部</button>
+                  <button class="segment" data-filter="watch" type="button">我的股</button>
+                  <button class="segment" data-filter="macro" type="button">宏观</button>
+                  <button class="segment" data-filter="filing" type="button">披露</button>
+                </div>
+              </div>
+              <div id="newsFeed" class="news-feed"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h2>信号热力</h2>
+                <span class="pill muted">过去 24h</span>
+              </div>
+              <div class="heatmap">
+                <button data-symbol="NVDA"><strong>NVDA</strong><span>92</span></button>
+                <button data-symbol="TSLA"><strong>TSLA</strong><span>86</span></button>
+                <button data-symbol="AAPL"><strong>AAPL</strong><span>74</span></button>
+                <button data-symbol="OXY"><strong>OXY</strong><span>66</span></button>
+                <button data-symbol="COIN"><strong>COIN</strong><span>61</span></button>
+                <button data-symbol="BRK.B"><strong>BRK.B</strong><span>58</span></button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="watchlist" class="view">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>我的观察列表</h2>
+              <button class="ghost-action" type="button">添加股票</button>
+            </div>
+            <div id="watchTable" class="stock-table"></div>
+          </div>
+        </section>
+
+        <section id="gurus" class="view">
+          <div class="guru-layout">
+            <section class="panel">
+              <div class="panel-head">
+                <h2>追踪对象</h2>
+                <span class="pill">4 人/机构</span>
+              </div>
+              <div id="guruList" class="guru-list"></div>
+            </section>
+            <section class="panel guru-detail">
+              <div class="panel-head">
+                <h2 id="guruName">Berkshire Hathaway</h2>
+                <span id="guruDelay" class="pill delay">13F · 最多滞后 45 天</span>
+              </div>
+              <div class="allocation">
+                <div class="donut" aria-label="行业分布图"></div>
+                <div id="guruStats" class="stat-grid"></div>
+              </div>
+              <div id="guruMoves" class="moves"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="stock" class="view">
+          <div class="stock-detail">
+            <section class="panel quote-panel">
+              <div>
+                <p class="eyebrow">当前股票</p>
+                <h2 id="stockName">NVDA · NVIDIA</h2>
+              </div>
+              <div class="quote">
+                <strong id="stockPrice">$182.40</strong>
+                <span id="stockChange">+2.8%</span>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h2>事件时间线</h2><span class="pill">新闻 + 披露</span></div>
+              <div id="timeline" class="timeline"></div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h2>决策检查</h2><span class="pill muted">非投资建议</span></div>
+              <div class="checklist">
+                <label><input type="checkbox" /> 价格变化是否已经反映新闻？</label>
+                <label><input type="checkbox" /> 是否有披露滞后或数据口径问题？</label>
+                <label><input type="checkbox" /> 是否接近财报、监管或宏观事件？</label>
+                <label><input type="checkbox" /> 我的买入/卖出条件是否写清楚？</label>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="notes" class="view">
+          <div class="notes-layout">
+            <section class="panel">
+              <div class="panel-head"><h2>Thesis 笔记</h2><span class="pill">自动带入事件</span></div>
+              <textarea id="noteBox">NVDA：继续跟踪 AI 服务器需求、毛利率变化、客户集中度。若财报前价格已大幅反映预期，需要降低追高冲动。</textarea>
+              <div class="note-actions">
+                <button class="primary-action" type="button">保存笔记</button>
+                <button class="ghost-action" type="button">加入复盘</button>
+              </div>
+            </section>
+            <section class="panel">
+              <div class="panel-head"><h2>今日简报</h2><span class="pill muted">点击生成</span></div>
+              <div id="briefOutput" class="brief-output">
+                <p>点击右上角生成简报，会把新闻、观察列表和大佬动作整理成一页盘前清单。</p>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
