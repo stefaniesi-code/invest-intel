@@ -7,6 +7,8 @@ const news = [
     type: "watch",
     sentiment: "good",
     impact: "高",
+    sourceUrl: "https://www.alphavantage.co/documentation/#news-sentiment",
+    sourceLatency: "新闻 API · 近实时",
     why: "直接影响数据中心收入预期，同时会传导到内存、光模块和代工链。",
   },
   {
@@ -17,6 +19,8 @@ const news = [
     type: "macro",
     sentiment: "good",
     impact: "中",
+    sourceUrl: "https://www.alphavantage.co/documentation/#news-sentiment",
+    sourceLatency: "新闻 API · 近实时",
     why: "利率下行通常利好久期较长的科技资产，但需要确认是否来自增长放缓。",
   },
   {
@@ -27,6 +31,8 @@ const news = [
     type: "filing",
     sentiment: "warn",
     impact: "中",
+    sourceUrl: "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+    sourceLatency: "SEC EDGAR · 披露后更新",
     why: "13F 是季度披露，能看方向但不能当作实时买卖单。",
   },
   {
@@ -37,6 +43,8 @@ const news = [
     type: "filing",
     sentiment: "good",
     impact: "中",
+    sourceUrl: "https://helpcenter.ark-funds.com/where-can-i-download-the-latest-etf-holdings",
+    sourceLatency: "ARK ETF · 交易日后更新",
     why: "ARK ETF 持仓日更，更适合观察短期调仓节奏。",
   },
   {
@@ -47,6 +55,8 @@ const news = [
     type: "filing",
     sentiment: "warn",
     impact: "低",
+    sourceUrl: "https://disclosures-clerk.house.gov/FinancialDisclosure",
+    sourceLatency: "STOCK Act · 延迟披露",
     why: "国会议员披露通常有延迟，适合做主题观察，不适合追实时交易。",
   },
   {
@@ -57,7 +67,54 @@ const news = [
     type: "watch",
     sentiment: "good",
     impact: "中",
+    sourceUrl: "https://www.alphavantage.co/documentation/#news-sentiment",
+    sourceLatency: "新闻 API · 近实时",
     why: "服务收入改善估值质量，硬件销量仍是主要不确定性。",
+  },
+];
+
+const sourceDefinitions = [
+  {
+    name: "Alpha Vantage News & Sentiment",
+    url: "https://www.alphavantage.co/documentation/#news-sentiment",
+    cadence: "近实时新闻",
+    use: "按 ticker、主题、时间抓新闻，并附带情绪分数，适合做新闻流和信号强度。",
+    caveat: "需要 API key；情绪分数只能作为排序辅助，不能直接当结论。",
+  },
+  {
+    name: "SEC EDGAR APIs",
+    url: "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+    cadence: "披露后更新",
+    use: "抓公司公告、13F、Form 4、公司事实数据，适合做可审计的披露追踪。",
+    caveat: "文件结构复杂，需要解析 accession number、CIK、表单类型和报告期。",
+  },
+  {
+    name: "SEC Form 13F FAQ",
+    url: "https://www.sec.gov/rules-regulations/staff-guidance/division-investment-management-frequently-asked-questions/frequently-asked-questions-about-form-13f",
+    cadence: "季度披露",
+    use: "解释机构持仓披露口径，适合给 Berkshire 等机构动作加延迟标签。",
+    caveat: "13F 不是实时交易记录，通常最多滞后 45 天。",
+  },
+  {
+    name: "ARK ETF Holdings",
+    url: "https://helpcenter.ark-funds.com/where-can-i-download-the-latest-etf-holdings",
+    cadence: "交易日后更新",
+    use: "追踪 Cathie Wood/ARK ETF 每日持仓变化，适合做短期调仓观察。",
+    caveat: "ETF 持仓不是完整个人组合，需要按基金权重理解。",
+  },
+  {
+    name: "House Financial Disclosures",
+    url: "https://disclosures-clerk.house.gov/FinancialDisclosure",
+    cadence: "延迟披露",
+    use: "追踪美国众议员定期交易报告，适合发现政策敏感主题。",
+    caveat: "披露时间晚于交易发生时间，金额多为区间。",
+  },
+  {
+    name: "SEC Insider Transactions",
+    url: "https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets",
+    cadence: "披露后数据集",
+    use: "追踪 Form 3/4/5 内部人买卖，适合观察 CEO、CFO、董事交易。",
+    caveat: "要区分主动买入、计划卖出、期权行权和税务相关交易。",
   },
 ];
 
@@ -80,6 +137,8 @@ const gurus = [
   {
     name: "Berkshire Hathaway",
     delay: "13F · 最多滞后 45 天",
+    sourceName: "SEC EDGAR",
+    sourceUrl: "https://www.sec.gov/edgar/browse/?CIK=1067983",
     style: "价值/保险现金流",
     aum: "$300B+",
     overlap: "AAPL / OXY",
@@ -93,6 +152,8 @@ const gurus = [
   {
     name: "Cathie Wood / ARK",
     delay: "ETF 持仓 · 交易日后更新",
+    sourceName: "ARK ETF Holdings",
+    sourceUrl: "https://helpcenter.ark-funds.com/where-can-i-download-the-latest-etf-holdings",
     style: "创新成长",
     aum: "$10B+",
     overlap: "TSLA / COIN",
@@ -106,6 +167,8 @@ const gurus = [
   {
     name: "国会议员交易",
     delay: "STOCK Act · 披露延迟",
+    sourceName: "House Disclosures",
+    sourceUrl: "https://disclosures-clerk.house.gov/FinancialDisclosure",
     style: "政策敏感",
     aum: "披露区间",
     overlap: "SMH / LMT",
@@ -119,6 +182,8 @@ const gurus = [
   {
     name: "公司内部人",
     delay: "Form 4 · 披露后可抓取",
+    sourceName: "SEC Insider Transactions",
+    sourceUrl: "https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets",
     style: "公司级信号",
     aum: "个人披露",
     overlap: "多股票",
@@ -179,6 +244,7 @@ const views = {
   gurus: "大佬追踪",
   stock: "股票详情",
   notes: "决策笔记",
+  sources: "信息来源",
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -221,9 +287,11 @@ function renderNews(filter = "all", query = "") {
             <span>${item.source}</span>
             <span>${item.time}</span>
             <span>影响：${item.impact}</span>
+            <span>${item.sourceLatency}</span>
           </div>
           <strong>${item.title}</strong>
           <p>${item.why}</p>
+          <a class="source-link" href="${item.sourceUrl}" target="_blank" rel="noreferrer">查看来源</a>
         </article>
       `
     )
@@ -276,6 +344,7 @@ function renderGuruDetail(index) {
     <div><span>风格</span><strong>${guru.style}</strong></div>
     <div><span>规模/口径</span><strong>${guru.aum}</strong></div>
     <div><span>与你重合</span><strong>${guru.overlap}</strong></div>
+    <div><span>追溯入口</span><strong><a class="inline-link" href="${guru.sourceUrl}" target="_blank" rel="noreferrer">${guru.sourceName}</a></strong></div>
   `;
   $("#guruMoves").innerHTML = guru.moves
     .map(
@@ -284,6 +353,24 @@ function renderGuruDetail(index) {
           <span class="tag ${action === "增持" || action === "买入" ? "good" : action === "减持" || action === "卖出" ? "bad" : ""}">${action}</span>
           <div><strong>${symbol}</strong><div class="meta-line">${detail}</div></div>
           <button class="ghost-action" data-symbol="${symbol}" type="button">查看</button>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderSources() {
+  $("#sourceGrid").innerHTML = sourceDefinitions
+    .map(
+      (source) => `
+        <article class="source-card">
+          <div class="source-card-top">
+            <strong>${source.name}</strong>
+            <span class="pill muted">${source.cadence}</span>
+          </div>
+          <p>${source.use}</p>
+          <div class="source-caveat">${source.caveat}</div>
+          <a class="source-link" href="${source.url}" target="_blank" rel="noreferrer">打开来源</a>
         </article>
       `
     )
@@ -361,3 +448,4 @@ renderNews();
 renderWatchlist();
 renderGurus();
 renderTimeline();
+renderSources();

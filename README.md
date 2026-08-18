@@ -18,3 +18,12 @@ python3 -m http.server 4173
 - 使用模拟数据展示产品体验
 - 已区分 13F、ARK 日度持仓、STOCK Act、Form 4 的披露延迟
 - 后续可接入 Alpha Vantage、SEC EDGAR、ARK CSV 等真实数据源
+
+## 信息来源
+
+- [Alpha Vantage News & Sentiment](https://www.alphavantage.co/documentation/#news-sentiment)：新闻流和情绪分数
+- [SEC EDGAR APIs](https://www.sec.gov/search-filings/edgar-application-programming-interfaces)：公司披露、13F、Form 4
+- [SEC Form 13F FAQ](https://www.sec.gov/rules-regulations/staff-guidance/division-investment-management-frequently-asked-questions/frequently-asked-questions-about-form-13f)：机构持仓披露口径
+- [ARK ETF Holdings](https://helpcenter.ark-funds.com/where-can-i-download-the-latest-etf-holdings)：ARK ETF 日度持仓
+- [House Financial Disclosures](https://disclosures-clerk.house.gov/FinancialDisclosure)：美国众议员交易披露
+- [SEC Insider Transactions](https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets)：内部人交易数据集
