@@ -15,9 +15,20 @@ python3 -m http.server 4173
 ## 当前状态
 
 - 静态 HTML/CSS/JS 原型
-- 使用模拟数据展示产品体验
+- 默认使用模拟数据展示产品体验
+- 可在页面里填入 Alpha Vantage API Key 拉取真实 News & Sentiment 新闻
 - 已区分 13F、ARK 日度持仓、STOCK Act、Form 4 的披露延迟
 - 后续可接入 Alpha Vantage、SEC EDGAR、ARK CSV 等真实数据源
+
+## 新闻 API
+
+页面已接入 Alpha Vantage `NEWS_SENTIMENT`：
+
+- API Key 只保存在当前浏览器的 `localStorage`
+- 不要把 API Key 写进仓库或提交到 GitHub
+- 可配置追踪股票，例如 `NVDA,TSLA,AAPL,OXY,COIN`
+- 页面提供 Alpha Vantage 免费 API Key 申请入口
+- 如果 API 限流、key 错误或网络失败，页面会自动回到样例数据
 
 ## 信息来源
 

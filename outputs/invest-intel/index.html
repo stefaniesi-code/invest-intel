@@ -85,6 +85,24 @@
                   <button class="segment" data-filter="filing" type="button">披露</button>
                 </div>
               </div>
+              <div class="api-panel" aria-label="新闻 API 设置">
+                <div class="api-fields">
+                  <label>
+                    <span>Alpha Vantage API Key</span>
+                    <input id="apiKeyInput" type="password" placeholder="填入 key 后拉取真实新闻" autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>追踪股票</span>
+                    <input id="tickerInput" type="text" value="NVDA,TSLA,AAPL,OXY,COIN" />
+                  </label>
+                </div>
+                <div class="api-actions">
+                  <button id="loadNewsBtn" class="primary-action" type="button">拉取真实新闻</button>
+                  <button id="clearApiKeyBtn" class="ghost-action" type="button">清除 Key</button>
+                  <a class="button-link" href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noreferrer">申请免费 Key</a>
+                </div>
+                <p id="apiStatus" class="api-status">当前显示样例数据；填入 API Key 后会调用 Alpha Vantage News &amp; Sentiment。</p>
+              </div>
               <div id="newsFeed" class="news-feed"></div>
             </section>
 

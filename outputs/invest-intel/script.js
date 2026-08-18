@@ -1,4 +1,4 @@
-const news = [
+const sampleNews = [
   {
     title: "AI 服务器订单继续上修，NVDA 供应链同步走强",
     source: "MarketWire",
@@ -72,6 +72,9 @@ const news = [
     why: "服务收入改善估值质量，硬件销量仍是主要不确定性。",
   },
 ];
+
+let news = [...sampleNews];
+let lastNewsMode = "sample";
 
 const sourceDefinitions = [
   {
@@ -250,6 +253,75 @@ const views = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatAlphaVantageTime(value) {
+  if (!value || value.length < 13) return "刚刚";
+  const year = value.slice(0, 4);
+  const month = value.slice(4, 6);
+  const day = value.slice(6, 8);
+  const hour = value.slice(9, 11);
+  const minute = value.slice(11, 13);
+  return `${month}-${day} ${hour}:${minute} UTC`;
+}
+
+function sentimentClass(score) {
+  const numeric = Number(score);
+  if (Number.isNaN(numeric)) return "warn";
+  if (numeric > 0.12) return "good";
+  if (numeric < -0.12) return "bad";
+  return "warn";
+}
+
+function sentimentLabel(sentiment) {
+  if (sentiment === "good") return "偏利好";
+  if (sentiment === "bad") return "偏利空";
+  return "需复核";
+}
+
+function impactFromSentiment(score) {
+  const numeric = Math.abs(Number(score));
+  if (Number.isNaN(numeric)) return "中";
+  if (numeric >= 0.35) return "高";
+  if (numeric >= 0.12) return "中";
+  return "低";
+}
+
+function firstTicker(article) {
+  const tickers = article.ticker_sentiment || [];
+  return tickers[0]?.ticker || "MARKET";
+}
+
+function mapAlphaVantageArticle(article) {
+  const ticker = firstTicker(article);
+  const score = article.overall_sentiment_score;
+  return {
+    title: article.title || "未命名新闻",
+    source: article.source || "Alpha Vantage",
+    time: formatAlphaVantageTime(article.time_published),
+    symbol: ticker,
+    type: watchlist.some(([symbol]) => symbol === ticker) ? "watch" : "macro",
+    sentiment: sentimentClass(score),
+    impact: impactFromSentiment(score),
+    sourceUrl: article.url || "https://www.alphavantage.co/documentation/#news-sentiment",
+    sourceLatency: "Alpha Vantage · live/historical news",
+    why: article.summary || "来自 Alpha Vantage News & Sentiment 的实时/历史市场新闻。",
+  };
+}
+
+function setApiStatus(message, tone = "neutral") {
+  const status = $("#apiStatus");
+  status.textContent = message;
+  status.dataset.tone = tone;
+}
+
 function renderPriorities() {
   $("#priorityList").innerHTML = priorities
     .map(
@@ -277,25 +349,104 @@ function renderNews(filter = "all", query = "") {
     return filterMatch && queryMatch;
   });
 
+  if (filtered.length === 0) {
+    $("#newsFeed").innerHTML = `
+      <article class="news-item">
+        <strong>没有匹配的新闻</strong>
+        <p>可以换一个 ticker、关键词，或放宽新闻过滤条件。</p>
+      </article>
+    `;
+    return;
+  }
+
   $("#newsFeed").innerHTML = filtered
     .map(
       (item) => `
         <article class="news-item">
           <div class="meta-line">
-            <span class="tag ${item.sentiment}">${item.sentiment === "good" ? "偏利好" : item.sentiment === "bad" ? "偏利空" : "需复核"}</span>
-            <span>${item.symbol}</span>
-            <span>${item.source}</span>
-            <span>${item.time}</span>
-            <span>影响：${item.impact}</span>
-            <span>${item.sourceLatency}</span>
+            <span class="tag ${escapeHtml(item.sentiment)}">${sentimentLabel(item.sentiment)}</span>
+            <span>${escapeHtml(item.symbol)}</span>
+            <span>${escapeHtml(item.source)}</span>
+            <span>${escapeHtml(item.time)}</span>
+            <span>影响：${escapeHtml(item.impact)}</span>
+            <span>${escapeHtml(item.sourceLatency)}</span>
           </div>
-          <strong>${item.title}</strong>
-          <p>${item.why}</p>
-          <a class="source-link" href="${item.sourceUrl}" target="_blank" rel="noreferrer">查看来源</a>
+          <strong>${escapeHtml(item.title)}</strong>
+          <p>${escapeHtml(item.why)}</p>
+          <a class="source-link" href="${escapeHtml(item.sourceUrl)}" target="_blank" rel="noreferrer">查看来源</a>
         </article>
       `
     )
     .join("");
+}
+
+async function loadAlphaVantageNews() {
+  const key = $("#apiKeyInput").value.trim();
+  const tickers = $("#tickerInput").value
+    .split(",")
+    .map((ticker) => ticker.trim().toUpperCase())
+    .filter(Boolean)
+    .join(",");
+
+  if (!key) {
+    setApiStatus("请先填入 Alpha Vantage API Key。", "warn");
+    return;
+  }
+
+  window.localStorage.setItem("investIntelAlphaVantageKey", key);
+  window.localStorage.setItem("investIntelTickers", tickers);
+  setApiStatus("正在拉取 Alpha Vantage 新闻...", "neutral");
+  $("#loadNewsBtn").disabled = true;
+
+  try {
+    const params = new URLSearchParams({
+      function: "NEWS_SENTIMENT",
+      sort: "LATEST",
+      limit: "30",
+      apikey: key,
+    });
+    if (tickers) params.set("tickers", tickers);
+
+    const response = await fetch(`https://www.alphavantage.co/query?${params.toString()}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+
+    if (payload.Note) throw new Error(payload.Note);
+    if (payload.Information) throw new Error(payload.Information);
+    if (payload["Error Message"]) throw new Error(payload["Error Message"]);
+    if (!Array.isArray(payload.feed)) throw new Error("返回格式里没有 feed。");
+
+    news = payload.feed.map(mapAlphaVantageArticle);
+    lastNewsMode = "api";
+    renderNews($(".segment.active")?.dataset.filter || "all", $("#searchInput").value);
+    setApiStatus(`已加载 ${news.length} 条真实新闻。来源：Alpha Vantage News & Sentiment。`, "good");
+  } catch (error) {
+    news = [...sampleNews];
+    lastNewsMode = "sample";
+    renderNews($(".segment.active")?.dataset.filter || "all", $("#searchInput").value);
+    setApiStatus(`拉取失败，已回到样例数据：${error.message}`, "bad");
+  } finally {
+    $("#loadNewsBtn").disabled = false;
+  }
+}
+
+function restoreApiInputs() {
+  const storedKey = window.localStorage.getItem("investIntelAlphaVantageKey");
+  const storedTickers = window.localStorage.getItem("investIntelTickers");
+  if (storedKey) {
+    $("#apiKeyInput").value = storedKey;
+    setApiStatus("已从本机浏览器读取 API Key；点击“拉取真实新闻”即可刷新。", "neutral");
+  }
+  if (storedTickers) $("#tickerInput").value = storedTickers;
+}
+
+function clearApiKey() {
+  window.localStorage.removeItem("investIntelAlphaVantageKey");
+  $("#apiKeyInput").value = "";
+  setApiStatus(
+    lastNewsMode === "api" ? "API Key 已清除；当前新闻会保留到下次刷新。" : "API Key 已清除；当前显示样例数据。",
+    "neutral"
+  );
 }
 
 function renderWatchlist() {
@@ -442,7 +593,10 @@ $("#searchInput").addEventListener("input", (event) => {
 });
 
 $("#briefBtn").addEventListener("click", generateBrief);
+$("#loadNewsBtn").addEventListener("click", loadAlphaVantageNews);
+$("#clearApiKeyBtn").addEventListener("click", clearApiKey);
 
+restoreApiInputs();
 renderPriorities();
 renderNews();
 renderWatchlist();
