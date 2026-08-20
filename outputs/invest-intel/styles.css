@@ -336,35 +336,58 @@ h2 {
 }
 
 .signal-orbit {
-  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: end;
+  gap: 10px;
   min-height: 210px;
 }
 
 .signal-card {
-  position: absolute;
-  right: 4%;
+  display: grid;
+  gap: 6px;
+  width: min(100%, 280px);
   min-width: 160px;
+  max-width: 260px;
   padding: 14px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 16px 36px rgba(23, 32, 42, 0.12);
   font-weight: 800;
+  text-decoration: none;
+}
+
+.signal-card span,
+.signal-card em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.signal-card small {
+  color: #546575;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.signal-card:hover {
+  transform: translateY(-2px);
 }
 
 .signal-card.buy {
-  top: 12px;
   color: var(--green);
 }
 
 .signal-card.warn {
-  top: 86px;
-  right: 24%;
   color: var(--amber);
+  justify-self: center;
 }
 
 .signal-card.file {
-  bottom: 12px;
   color: var(--blue);
 }
 
@@ -533,7 +556,7 @@ h2 {
 
 .heatmap {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -841,7 +864,15 @@ textarea {
   }
 
   .signal-orbit {
-    min-height: 180px;
+    justify-items: stretch;
+    min-height: 0;
+  }
+
+  .signal-card,
+  .signal-card.warn {
+    justify-self: stretch;
+    max-width: none;
+    width: 100%;
   }
 
   .stock-row {

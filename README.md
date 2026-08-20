@@ -29,6 +29,8 @@ python3 -m http.server 4173
 - 可配置追踪股票，例如 `NVDA,TSLA,AAPL,OXY,COIN`
 - 每次打开页面会自动计算“前一天”的新闻窗口
 - 如果浏览器里已有 API Key，会自动刷新前一天新闻
+- 默认资产池已扩展到大盘 ETF、AI/科技股、金融、医药和主流加密资产
+- Alpha Vantage 多 ticker 参数偏“同时匹配”，所以页面先拉广谱新闻，再在前端按资产池标记/筛选
 - 页面提供 Alpha Vantage 免费 API Key 申请入口
 - 如果 API 限流、key 错误或网络失败，页面会自动回到样例数据
 

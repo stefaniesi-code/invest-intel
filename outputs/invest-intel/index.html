@@ -60,11 +60,7 @@
                 <h2>先看事件，再看价格</h2>
                 <p>把新闻、披露、内部人交易和你的观察列表合并成一张盘前清单。</p>
               </div>
-              <div class="signal-orbit" aria-hidden="true">
-                <div class="signal-card buy">ARK 增持 TSLA</div>
-                <div class="signal-card warn">NVDA 财报倒计时</div>
-                <div class="signal-card file">BRK 13F 更新</div>
-              </div>
+              <div id="eventDeck" class="signal-orbit"></div>
             </section>
 
             <section class="panel">
@@ -92,17 +88,18 @@
                     <input id="apiKeyInput" type="password" placeholder="填入 key 后拉取真实新闻" autocomplete="off" />
                   </label>
                   <label>
-                    <span>追踪股票</span>
-                    <input id="tickerInput" type="text" value="NVDA,TSLA,AAPL,OXY,COIN" />
+                    <span>关注资产池</span>
+                    <input id="tickerInput" type="text" value="NVDA,MSFT,AAPL,AMZN,META,GOOGL,TSLA,AMD,AVGO,SMCI,PLTR,COIN,MSTR,HOOD,BRK.B,JPM,LLY,NVO,SPY,QQQ,CRYPTO:BTC,CRYPTO:ETH,CRYPTO:SOL" />
                   </label>
                 </div>
                 <div class="api-actions">
                   <button id="loadNewsBtn" class="primary-action" type="button">拉取昨日新闻</button>
+                  <button id="resetAssetsBtn" class="ghost-action" type="button">恢复默认池</button>
                   <button id="clearApiKeyBtn" class="ghost-action" type="button">清除 Key</button>
                   <a class="button-link" href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noreferrer">申请免费 Key</a>
                 </div>
                 <p id="newsWindow" class="api-status">新闻窗口：自动计算前一天。</p>
-                <p id="apiStatus" class="api-status">当前显示样例数据；填入 API Key 后会调用 Alpha Vantage News &amp; Sentiment。</p>
+                <p id="apiStatus" class="api-status">当前显示样例数据；填入 API Key 后会先拉昨日广谱市场新闻，再用资产池做前端标记和筛选。</p>
               </div>
               <div id="newsFeed" class="news-feed"></div>
             </section>
@@ -119,6 +116,12 @@
                 <button data-symbol="OXY"><strong>OXY</strong><span>66</span></button>
                 <button data-symbol="COIN"><strong>COIN</strong><span>61</span></button>
                 <button data-symbol="BRK.B"><strong>BRK.B</strong><span>58</span></button>
+                <button data-symbol="MSFT"><strong>MSFT</strong><span>82</span></button>
+                <button data-symbol="AMD"><strong>AMD</strong><span>76</span></button>
+                <button data-symbol="PLTR"><strong>PLTR</strong><span>73</span></button>
+                <button data-symbol="CRYPTO:BTC"><strong>BTC</strong><span>71</span></button>
+                <button data-symbol="JPM"><strong>JPM</strong><span>57</span></button>
+                <button data-symbol="LLY"><strong>LLY</strong><span>69</span></button>
               </div>
             </section>
           </div>
