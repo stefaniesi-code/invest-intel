@@ -75,6 +75,7 @@ const sampleNews = [
 
 let news = [...sampleNews];
 let lastNewsMode = "sample";
+let activeNewsWindowLabel = "";
 
 const sourceDefinitions = [
   {
@@ -253,6 +254,42 @@ const views = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatLocalDate(date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function formatAlphaVantageDateTime(date) {
+  return `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}T${pad2(date.getHours())}${pad2(date.getMinutes())}`;
+}
+
+function previousDayWindow(now = new Date()) {
+  const start = new Date(now);
+  start.setDate(now.getDate() - 1);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setHours(23, 59, 0, 0);
+
+  return {
+    start,
+    end,
+    dateLabel: formatLocalDate(start),
+    timeFrom: formatAlphaVantageDateTime(start),
+    timeTo: formatAlphaVantageDateTime(end),
+  };
+}
+
+function updateDeskDates() {
+  const yesterday = previousDayWindow();
+  activeNewsWindowLabel = yesterday.dateLabel;
+  $("#deskDate").textContent = `${formatLocalDate(new Date())} · 美股盘前工作台`;
+  $("#newsWindow").textContent = `新闻窗口：${yesterday.dateLabel} 00:00-23:59，本机时区。`;
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -311,7 +348,7 @@ function mapAlphaVantageArticle(article) {
     sentiment: sentimentClass(score),
     impact: impactFromSentiment(score),
     sourceUrl: article.url || "https://www.alphavantage.co/documentation/#news-sentiment",
-    sourceLatency: "Alpha Vantage · live/historical news",
+    sourceLatency: "Alpha Vantage · 昨日新闻",
     why: article.summary || "来自 Alpha Vantage News & Sentiment 的实时/历史市场新闻。",
   };
 }
@@ -380,7 +417,7 @@ function renderNews(filter = "all", query = "") {
     .join("");
 }
 
-async function loadAlphaVantageNews() {
+async function loadAlphaVantageNews(options = {}) {
   const key = $("#apiKeyInput").value.trim();
   const tickers = $("#tickerInput").value
     .split(",")
@@ -395,14 +432,18 @@ async function loadAlphaVantageNews() {
 
   window.localStorage.setItem("investIntelAlphaVantageKey", key);
   window.localStorage.setItem("investIntelTickers", tickers);
-  setApiStatus("正在拉取 Alpha Vantage 新闻...", "neutral");
+  const newsWindow = previousDayWindow();
+  activeNewsWindowLabel = newsWindow.dateLabel;
+  setApiStatus(`正在拉取 ${newsWindow.dateLabel} 的 Alpha Vantage 新闻...`, "neutral");
   $("#loadNewsBtn").disabled = true;
 
   try {
     const params = new URLSearchParams({
       function: "NEWS_SENTIMENT",
+      time_from: newsWindow.timeFrom,
+      time_to: newsWindow.timeTo,
       sort: "LATEST",
-      limit: "30",
+      limit: "50",
       apikey: key,
     });
     if (tickers) params.set("tickers", tickers);
@@ -419,12 +460,13 @@ async function loadAlphaVantageNews() {
     news = payload.feed.map(mapAlphaVantageArticle);
     lastNewsMode = "api";
     renderNews($(".segment.active")?.dataset.filter || "all", $("#searchInput").value);
-    setApiStatus(`已加载 ${news.length} 条真实新闻。来源：Alpha Vantage News & Sentiment。`, "good");
+    setApiStatus(`已加载 ${news.length} 条 ${newsWindow.dateLabel} 的真实新闻。来源：Alpha Vantage News & Sentiment。`, "good");
   } catch (error) {
     news = [...sampleNews];
     lastNewsMode = "sample";
     renderNews($(".segment.active")?.dataset.filter || "all", $("#searchInput").value);
-    setApiStatus(`拉取失败，已回到样例数据：${error.message}`, "bad");
+    const prefix = options.auto ? "自动刷新失败" : "拉取失败";
+    setApiStatus(`${prefix}，已回到样例数据：${error.message}`, "bad");
   } finally {
     $("#loadNewsBtn").disabled = false;
   }
@@ -435,9 +477,10 @@ function restoreApiInputs() {
   const storedTickers = window.localStorage.getItem("investIntelTickers");
   if (storedKey) {
     $("#apiKeyInput").value = storedKey;
-    setApiStatus("已从本机浏览器读取 API Key；点击“拉取真实新闻”即可刷新。", "neutral");
+    setApiStatus("已从本机浏览器读取 API Key，正在自动刷新昨日新闻。", "neutral");
   }
   if (storedTickers) $("#tickerInput").value = storedTickers;
+  return Boolean(storedKey);
 }
 
 function clearApiKey() {
@@ -447,6 +490,18 @@ function clearApiKey() {
     lastNewsMode === "api" ? "API Key 已清除；当前新闻会保留到下次刷新。" : "API Key 已清除；当前显示样例数据。",
     "neutral"
   );
+}
+
+function scheduleDailyNewsRefresh() {
+  window.setInterval(() => {
+    const latestWindow = previousDayWindow();
+    if (latestWindow.dateLabel === activeNewsWindowLabel) return;
+
+    updateDeskDates();
+    if ($("#apiKeyInput").value.trim()) {
+      loadAlphaVantageNews({ auto: true });
+    }
+  }, 30 * 60 * 1000);
 }
 
 function renderWatchlist() {
@@ -596,10 +651,13 @@ $("#briefBtn").addEventListener("click", generateBrief);
 $("#loadNewsBtn").addEventListener("click", loadAlphaVantageNews);
 $("#clearApiKeyBtn").addEventListener("click", clearApiKey);
 
-restoreApiInputs();
+updateDeskDates();
+const hasStoredApiKey = restoreApiInputs();
 renderPriorities();
 renderNews();
 renderWatchlist();
 renderGurus();
 renderTimeline();
 renderSources();
+if (hasStoredApiKey) loadAlphaVantageNews({ auto: true });
+scheduleDailyNewsRefresh();

@@ -27,6 +27,8 @@ python3 -m http.server 4173
 - API Key 只保存在当前浏览器的 `localStorage`
 - 不要把 API Key 写进仓库或提交到 GitHub
 - 可配置追踪股票，例如 `NVDA,TSLA,AAPL,OXY,COIN`
+- 每次打开页面会自动计算“前一天”的新闻窗口
+- 如果浏览器里已有 API Key，会自动刷新前一天新闻
 - 页面提供 Alpha Vantage 免费 API Key 申请入口
 - 如果 API 限流、key 错误或网络失败，页面会自动回到样例数据
 
